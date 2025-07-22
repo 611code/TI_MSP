@@ -16,9 +16,11 @@
 
 # 一、延时
 
+## 延时函数
+
 CPUCLK_FREQ为主频频率，一般在ti_msp_dl_config.h里已经定义，默认32M
 
-delay_cycles为系统函数
+delay_cycles为系统函数，CPUCLK_FREQ为系统默认主频宏定义
 
 延时一秒：
 
@@ -573,8 +575,6 @@ void UART_0_INST_IRQHandler(void)
 
 ![image-20250715160558900](./assets/image-20250715160558900.png)
 
-![image-20250715155959684](./assets/image-20250715155959684.png)
-
 ## 设置定时器的PWM占空比（设置比较值）
 
 ```
@@ -724,3 +724,367 @@ void GROUP1_IRQHandler(void)
 }
 ```
 
+# 八、ADC采集
+
+![image-20250721204424412](./assets/image-20250721204424412.png)
+
+![image-20250721204436572](./assets/image-20250721204436572.png)
+
+![image-20250721204449188](./assets/image-20250721204449188.png)
+
+## 使能/失能ADC转换
+
+```
+DL_ADC12_enableConversions(ADC12_Regs *adc12)
+```
+
+- 作用：设置ADC的ENC（Enable Conversion）位，允许ADC进行采样转换。
+
+- 原理：adc12->ULLMEM.CTL0 |= (ADC12_CTL0_ENC_ON);
+
+- 说明：只有使能后，ADC才能响应转换启动命令。
+
+```
+DL_ADC12_disableConversions(ADC12_Regs *adc12)
+```
+
+- 作用：清除ENC位，禁止ADC采样转换。
+
+- 原理：adc12->ULLMEM.CTL0 &= ~(ADC12_CTL0_ENC_ON);
+
+## 启动/停止ADC转换
+
+```
+DL_ADC12_startConversion(ADC12_Regs *adc12)
+```
+
+- 作用：软件触发ADC开始采样转换，设置SC（Start Conversion）位。
+
+- 原理：adc12->ULLMEM.CTL1 |= (ADC12_CTL1_SC_START);
+
+```
+DL_ADC12_stopConversion(ADC12_Regs *adc12)
+```
+
+- 作用：停止ADC采样转换，清除SC位。
+
+- 原理：adc12->ULLMEM.CTL1 &= ~(ADC12_CTL1_SC_START);
+
+## 获取ADC状态
+
+```
+DL_ADC12_getStatus(const ADC12_Regs *adc12)
+```
+
+- 作用：读取ADC的状态寄存器，判断当前是否处于空闲、采样、转换等状态。
+
+- 原理：return (adc12->ULLMEM.STATUS);
+
+- 常用判断：DL_ADC12_getStatus(...) != DL_ADC12_STATUS_CONVERSION_IDLE，表示ADC正在采样/转换。
+
+## 读取ADC采样结果
+
+```
+DL_ADC12_getMemResult(const ADC12_Regs *adc12, DL_ADC12_MEM_IDX idx)
+```
+
+- 作用：读取指定采样存储单元（MEMx）的转换结果。
+
+- 原理：return (uint16_t)(adc12->ULLMEM.MEMRES[idx]);
+
+- 说明：ADC有多个采样存储单元（如MEM0~MEM11），可配置多通道采样。
+
+## example
+
+### 正常读取例子
+
+```
+//读取ADC的数据
+unsigned int adc_getValue(void)
+{
+    unsigned int gAdcResult = 0;
+
+    //使能ADC转换
+    DL_ADC12_enableConversions(ADC_VOLTAGE_INST);
+    //软件触发ADC开始转换
+    DL_ADC12_startConversion(ADC_VOLTAGE_INST);
+
+    //如果当前状态 不是 空闲状态
+    while (DL_ADC12_getStatus(ADC_VOLTAGE_INST) != DL_ADC12_STATUS_CONVERSION_IDLE );
+
+    //清除触发转换状态
+    DL_ADC12_stopConversion(ADC_VOLTAGE_INST);
+    //失能ADC转换
+    DL_ADC12_disableConversions(ADC_VOLTAGE_INST);
+
+    //获取数据
+    gAdcResult = DL_ADC12_getMemResult(ADC_VOLTAGE_INST, ADC_VOLTAGE_ADCMEM_ADC_CH0);
+
+    return gAdcResult;
+}
+```
+
+### DMA读取例子
+
+```
+//设置DMA搬运的起始地址
+DL_DMA_setSrcAddr(DMA, DMA_CH0_CHAN_ID, (uint32_t) &ADC0->ULLMEM.MEMRES[0]);
+//设置DMA搬运的目的地址
+DL_DMA_setDestAddr(DMA, DMA_CH0_CHAN_ID, (uint32_t) &ADC_VALUE[0]);
+//开启DMA
+DL_DMA_enableChannel(DMA, DMA_CH0_CHAN_ID);
+//开启ADC转换
+DL_ADC12_startConversion(ADC_VOLTAGE_INST);
+
+while (1)
+{
+    //获取ADC数据
+    adc_value = adc_getValue(10);
+
+    //将ADC采集的数据换算为电压
+    voltage_value = adc_value/4095.0*3.3;
+
+    delay_cycles(32000000);
+}
+
+//读取ADC的数据
+unsigned int adc_getValue(unsigned int number)
+{
+        unsigned int gAdcResult = 0;
+        unsigned char i = 0;
+
+        //采集多次累加
+        for( i = 0; i < number; i++ )
+        {
+                gAdcResult += ADC_VALUE[i];
+        }
+        //均值滤波
+        gAdcResult /= number;
+
+        return gAdcResult;
+}
+```
+
+
+
+# 九、DMA
+
+![image-20250721210451537](./assets/image-20250721210451537.png)
+
+
+
+# 十、各个中断服务函数及简易任务调度器方案
+
+
+
+|    中断函数名     |              中断说明              |
+| :---------------: | :--------------------------------: |
+|   Reset_Handler   |            复位中断函数            |
+|    NMI_Handler    |          不可屏蔽中断函数          |
+| HardFault_Handler |          硬件故障中断函数          |
+|    SVC_Handler    |            特权中断函数            |
+|  PendSV_Handler   | 一种可挂起的、最低优先级的中断函数 |
+|  SysTick_Handler  |         滴答定时器中断函数         |
+| GROUP0_IRQHandler |          GROUP0的中断函数          |
+| GROUP1_IRQHandler |           GROUP1中断函数           |
+| TIMG8_IRQHandler  |          TIMG8的中断函数           |
+| UART3_IRQHandler  |          UART3的中断函数           |
+|  ADC0_IRQHandler  |           ADC0的中断函数           |
+|  ADC1_IRQHandler  |           ADC1的中断函数           |
+| CANFD0_IRQHandler |          CANFD0的中断函数          |
+|  DAC0_IRQHandler  |           DAC0的中断函数           |
+|  SPI0_IRQHandler  |           SPI0的中断函数           |
+|  SPI1_IRQHandler  |           SPI1的中断函数           |
+| UART1_IRQHandler  |          UART1的中断函数           |
+| UART2_IRQHandler  |          UART2的中断函数           |
+| UART0_IRQHandler  |          UART0的中断函数           |
+| TIMG0_IRQHandler  |          TIMG0 的中断函数          |
+| TIMG6_IRQHandler  |          TIMG6的中断函数           |
+| TIMA0_IRQHandler  |          TIMA0的中断函数           |
+| TIMA1_IRQHandler  |          TIMA1的中断函数           |
+| TIMG7_IRQHandler  |          TIMG7的中断函数           |
+| TIMG12_IRQHandler |          TIMG12的中断函数          |
+|  I2C0_IRQHandler  |           I2C0的中断函数           |
+|  I2C1_IRQHandler  |           I2C1的中断函数           |
+|  AES_IRQHandler   |        硬件加速器的中断函数        |
+|  RTC_IRQHandler   |       RTC实时时钟的中断函数        |
+|  DMA_IRQHandler   |           DMA的中断函数            |
+
+## 对于**GROUP**中断
+
+![image-20250721181630897](./assets/image-20250721181630897.png)
+
+初始化时需加上：
+
+```
+NVIC_EnableIRQ(KEY_INT_IRQN);//开启按键引脚的GPIOA端口中断
+```
+
+KEY_INT_IRQN中的KEY_为GPIO名字
+
+
+
+GROUP1_IRQ是一组中断请求事件的共用中断服务函数入口，因此，进入中断后，要进一步判断是哪一个中断源，如果是GPIO，如果有多个GPIO中断，还要进一步判断对应引脚状态。
+
+以按键中断为例
+
+```
+void GROUP1_IRQHandler(void)//Group1的中断服务函数
+{
+    //读取Group1的中断寄存器并清除中断标志位
+    switch( DL_Interrupt_getPendingGroup(DL_INTERRUPT_GROUP_1) )
+    {
+        //检查是否是KEY的GPIOB端口中断，注意是INT_IIDX，不是PIN_22_IIDX
+        case KEY_INT_IIDX:
+            //如果按键按下变为高电平
+            if( DL_GPIO_readPins(KEY_PORT, KEY_PIN_21_PIN) > 0 )
+            {
+                //设置LED引脚状态翻转
+                DL_GPIO_togglePins(LED1_PORT, LED1_PIN_22_PIN);
+            }
+        break;
+    }
+}
+```
+
+所有的中断基本上都是这个方案，不过中断内还有另一种写法
+
+以外部中断编码器读取为例：
+
+```
+//外部中断处理函数
+void GROUP1_IRQHandler(void)
+{
+	uint32_t gpio_status;
+
+	//获取中断信号情况
+	gpio_status = DL_GPIO_getEnabledInterruptStatus(GPIOB, GPIO_ENCODER_PIN_LA_PIN | GPIO_ENCODER_PIN_LB_PIN);
+	//编码器A相上升沿触发
+	if((gpio_status & GPIO_ENCODER_PIN_LA_PIN) == GPIO_ENCODER_PIN_LA_PIN)
+	{
+		//如果在A相上升沿下，B相为低电平
+		if(!DL_GPIO_readPins(GPIOB,GPIO_ENCODER_PIN_LB_PIN))
+		{
+			motor_encoder.temp_count--;
+		}
+		else
+		{
+			motor_encoder.temp_count++;
+		}
+	}//编码器B相上升沿触发
+	else if((gpio_status & GPIO_ENCODER_PIN_LB_PIN)==GPIO_ENCODER_PIN_LB_PIN)
+	{
+		//如果在B相上升沿下，A相为低电平
+		if(!DL_GPIO_readPins(GPIOB,GPIO_ENCODER_PIN_LA_PIN))
+		{
+			motor_encoder.temp_count++;
+		}
+		else
+		{
+			motor_encoder.temp_count--;
+		}
+	}
+	//清除状态
+	DL_GPIO_clearInterruptStatus(GPIOB,GPIO_ENCODER_PIN_LA_PIN|GPIO_ENCODER_PIN_LB_PIN);
+}
+```
+
+解释各个函数的API
+
+**DL_GPIO_getEnabledInterruptStatus(GPIOx, PIN_MASK)**
+
+- 作用：获取指定端口（如 GPIOA、GPIOB）上，指定引脚（PIN_MASK）当前触发的中断状态。
+
+参数：
+
+- GPIOx：GPIO端口（如 GPIOA、GPIOB）
+
+- PIN_MASK：引脚掩码（如 GPIO_ENCODER_PIN_LA_PIN）。就是GPIO的组名GPIO_ENCODER+组名下的引脚名字PIN_LA
+
+- 返回值：返回该端口上指定引脚的中断状态（通常为位掩码，哪个引脚触发中断则对应位为1）。
+
+**DL_GPIO_clearInterruptStatus(GPIOx, PIN_MASK)**
+
+- 作用：清除指定端口、指定引脚的中断标志位（即“消抖”或“复位”中断）。
+
+参数：
+
+- GPIOx：GPIO端口
+
+- PIN_MASK：引脚掩码
+
+## 任务调度器
+
+首先我们要配置滴答定时器，根据主频频率来，最终是1ms就行。
+
+![image-20250715155502706](./assets/image-20250715155502706.png)
+
+```
+volatile int uwTick;
+void SysTick_Handler(void)
+{
+    uwTick++;
+}
+
+```
+
+这样我们就实现了hal库中的uwtick。
+
+```
+#include "scheduler.h"
+
+//全局变量，用于存储任务数量
+uint8_t task_num = 0;
+
+typedef struct
+{
+	void (*task_func)(void);
+	uint32_t rate_ms;
+	uint32_t last_ms;
+}task_t;
+
+//静态任务数组，每个任务包含任务函数、执行周期（毫秒）和上次运行时间（毫秒）
+static task_t scheduler_task[]=
+{
+	{led_proc,1,0},//定义一个任务，任务函数为 Led_Proc，执行周期为 1 毫秒，初始上次运行时间为 0
+	{key_proc,10,0},//定义一个任务，任务函数为 Key_Proc，执行周期为 10 毫秒，初始上次运行时间为 0
+	{lcd_proc,100,0}//定义一个任务，任务函数为 lcd_proc，执行周期为 100 毫秒，初始上次运行时间为 0
+};
+
+void scheduler_init(void)
+{
+	task_num = sizeof(task) / sizeof(task_t);
+}
+
+//遍历任务数组，检查是否有任务需要执行。如果当前时间已经超过任务的执行周期，则执行该任务并更新上次运行时间
+void scheduler_run(void)
+{
+	for(uint8_t i=0;i<task_num;i++)
+	{
+		uint32_t now_time = uwTick;
+		if(now_time >= task[i].last_ms + task[i].rate_ms)
+		{
+			task[i].last_ms = now_time;
+			task[i].func_proc();
+		}
+	}
+}
+
+
+```
+
+ **void scheduler_run(void)**  ：调度器运⾏函数，负责遍历并执⾏任务数组中的任务。
+
+ **for (uint8_t i = 0; i < task_num; i )**  ：循环遍历任务数组中的所有任务。 
+
+**uint32_t now_time = uwTick**  ：获取当前的系统时间（毫秒）。 
+
+**if (now_time   scheduler_task[i].rate_ms + scheduler_task[i].last_run)**  ：检查当前时间是否达到任务的执⾏时间。
+
+ **now_time**  ：当前时间。 scheduler_task[i].rate_ms  ：任务的执⾏周期。 
+
+**scheduler_task[i].last_run**  ：任务的上次运⾏时间。
+
+ **scheduler_task[i].last_run = now_time**  ：更新任务的上次运⾏时间为当前时间。 
+
+**scheduler_task[i].task_func()**  ：执⾏任务函数。
