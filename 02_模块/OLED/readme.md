@@ -53,7 +53,7 @@ int main(void)
 
 具体文件为oled_software_i2c.c.h，bmp.h，oledfont.h
 
-用法跟硬件一样，函数名和参数都一样。不过速度很慢，毕竟主频默认32M，最高40M
+用法跟硬件一样，函数名和参数都一样。不过速度很慢，毕竟主频默认32M，最高80M
 
 ```
 int main(void)
