@@ -2,7 +2,7 @@
 
 先讲一下TI的时钟：
 
-**BUSCLK**：由内部高频振荡器提供的CPU时钟，通常芯片默认设置为了32MHz。
+**BUSCLK**：由内部高频振荡器提供的CPU时钟，通常芯片默认设置为了32MHz，最高80M。
 
 **MFCLK**：只能使用固定的4MHz时钟(参考用户手册132页)。开启的话需要配置时钟树的SYSOSC_4M分支，才能够正常开启。
 
@@ -682,6 +682,8 @@ for (int i = 999; i > 0; i--)
 
 # 七、tim/编码器读取
 
+​	TI板仅有一个QEI，所以一般采用外部中断方式进行读取编码器值(定时器输入捕获也可以，教程不多)。所以建议一倍频，防止中断压力太大，影响其他任务，中断里面也尽量只放if判断和计数。
+
 ![image-20250715155804173](./assets/image-20250715155804173.png)
 
 ## 编码器中断服务函数（外部中断方式）
@@ -723,6 +725,12 @@ void GROUP1_IRQHandler(void)
 	DL_GPIO_clearInterruptStatus(GPIOB,GPIO_ENCODER_PIN_LA_PIN|GPIO_ENCODER_PIN_LB_PIN);
 }
 ```
+
+
+
+# 编码器中断服务函数（定时器输入捕获方式）
+
+
 
 # 八、ADC采集
 
@@ -922,7 +930,7 @@ NVIC_EnableIRQ(KEY_INT_IRQN);//开启按键引脚的GPIOA端口中断
 
 KEY_INT_IRQN中的KEY_为GPIO名字
 
-
+GPIO的中断触发后，都是通过GROUP1线发布到总线
 
 GROUP1_IRQ是一组中断请求事件的共用中断服务函数入口，因此，进入中断后，要进一步判断是哪一个中断源，如果是GPIO，如果有多个GPIO中断，还要进一步判断对应引脚状态。
 
@@ -1088,3 +1096,6 @@ void scheduler_run(void)
  **scheduler_task[i].last_run = now_time**  ：更新任务的上次运⾏时间为当前时间。 
 
 **scheduler_task[i].task_func()**  ：执⾏任务函数。
+
+# 十一、小车实例演示
+
