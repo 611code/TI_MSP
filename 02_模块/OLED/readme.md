@@ -43,6 +43,30 @@ int main(void)
 }
 ```
 
+当然，文件内含有一个函数，可以简单打印数据，有兴趣的可以学习一下，所有的屏幕都可以简易移植和学习。头文件需添加"stdarg.h".
+
+```
+int OLED_Printf(uint8_t x, uint8_t y, u8 size1, const char *format, ...)
+{
+   char buffer[64];
+   va_list arg;
+   int len;
+
+   va_start(arg, format);
+   len = vsnprintf(buffer, sizeof(buffer), format, arg);
+   va_end(arg);
+
+   OLED_ShowString(x, y, (unsigned char *)buffer, size1,1);
+   return len;
+}
+```
+
+实例：
+
+```
+OLED_Printf(82,0,8,"Key:%d ",KeyNum);
+```
+
 ![01f495d6553c006eabf98c5928f7926d](./assets/01f495d6553c006eabf98c5928f7926d.jpg)
 
 ## 软件I2C
