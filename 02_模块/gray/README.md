@@ -2,7 +2,7 @@
 
 ## 无MCU版本
 
-驱动代码为:No_Mcu_gray.c.h
+驱动代码为:No_Mcu_gray.c.h和ADC文件下的内容
 
 ### 配置
 
