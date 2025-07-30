@@ -34,6 +34,15 @@ no_gray_init_all();
 no_gray_work();
 ```
 
+显示
+
+```
+OLED_Printf(0,48,8,"Gary %d%d%d%d%d%d%d%d ",(Digtal>>0)&0x01,(Digtal>>1)&0x01,(Digtal>>2)&0x01,(Digtal>>3)&0x01,(Digtal>>4)&0x01,(Digtal>>5)&0x01,(Digtal>>6)&0x01,(Digtal>>7)&0x01);	
+
+```
+
+
+
 如何按键校准？
 
 在no_gray_init_all()里有这么一句
@@ -91,3 +100,11 @@ Gray_Task();
 ```
 
 即可
+
+显示：
+
+```
+OLED_Printf(0,48,8,"Gary:%d%d%d%d%d%d%d%d L%d",(Digtal>>0)&0x01,(Digtal>>1)&0x01,(Digtal>>2)&0x01,(Digtal>>3)&0x01,(Digtal>>4)&0x01,(Digtal>>5)&0x01,(Digtal>>6)&0x01,(Digtal>>7)&0x01,black_line_count);
+
+```
+
