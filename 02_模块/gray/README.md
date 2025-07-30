@@ -1,0 +1,93 @@
+# 感为八路灰度
+
+## 无MCU版本
+
+驱动代码为:No_Mcu_gray.c.h
+
+### 配置
+
+![image-20250730164745109](./assets/image-20250730164745109.png)
+
+![image-20250730164754471](./assets/image-20250730164754471.png)
+
+![image-20250730164801945](./assets/image-20250730164801945.png)
+
+![image-20250730164815735](./assets/image-20250730164815735.png)
+
+![image-20250730164840413](./assets/image-20250730164840413.png)
+
+![image-20250730164852916](./assets/image-20250730164852916.png)
+
+![image-20250730164903024](./assets/image-20250730164903024.png)
+
+### 使用
+
+初始化
+
+```
+no_gray_init_all();
+```
+
+任务
+
+```
+no_gray_work();
+```
+
+如何按键校准？
+
+在no_gray_init_all()里有这么一句
+
+```
+Get_Anolog_Value(&sensor,Anolog);
+	//此时打印的ADC的值，可用通过这个ADC作为黑白值的校准
+	//也可以自己写按键逻辑完成一键校准功能
+```
+
+也就是说Anolog[8]是那个阈值，所以直接
+
+简略版本：
+
+```
+extern unsigned short Anolog[8];
+extern unsigned short white[8];
+extern unsigned short black[8];
+
+if(KeyNum == 1)
+{
+    no_gray_adjust();
+    for(uint8_t i=0;i<8;i++)
+    {
+        white[i] = Anolog[i];
+    }
+}
+else if(KeyNum == 2)
+{
+    for(uint8_t i=0;i<8;i++)
+    {
+        black[i] = Anolog[i];
+    }
+}
+```
+
+
+
+## 含MCU版本
+
+除了no_gray那两个文件，其他都是。
+
+配置I2C
+
+![image-20250730165419689](./assets/image-20250730165419689.png)
+
+其他没什么
+
+### 使用流程：
+
+直接任务里调用
+
+```
+Gray_Task();
+```
+
+即可
