@@ -13,6 +13,7 @@ ORDERED_OBJS += \
 "./empty.o" \
 "./ti_msp_dl_config.o" \
 "./startup_mspm0g350x_ticlang.o" \
+"./Bsp/ADC/adc_app.o" \
 "./Bsp/BMI088/BMI088Middleware.o" \
 "./Bsp/BMI088/BMI088driver.o" \
 "./Bsp/BMI088/Klman_Yaw/ekf_yaw.o" \
@@ -31,6 +32,7 @@ ORDERED_OBJS += \
 "./Bsp/UART/ringbuffer.o" \
 "./Bsp/UART/uart_app.o" \
 "./Bsp/gray/IIC.o" \
+"./Bsp/gray/No_Mcu_gray.o" \
 "./Bsp/gray/gray_app.o" \
 "./Bsp/gray/hardware_iic.o" \
 $(GEN_CMDS__FLAG) \
@@ -45,6 +47,7 @@ RMDIR := RMDIR /S/Q
 # All of the sources participating in the build are defined here
 -include sources.mk
 -include subdir_vars.mk
+-include Bsp/ADC/subdir_vars.mk
 -include Bsp/BMI088/subdir_vars.mk
 -include Bsp/BMI088/Klman_Yaw/subdir_vars.mk
 -include Bsp/Button/subdir_vars.mk
@@ -56,6 +59,7 @@ RMDIR := RMDIR /S/Q
 -include Bsp/UART/subdir_vars.mk
 -include Bsp/gray/subdir_vars.mk
 -include subdir_rules.mk
+-include Bsp/ADC/subdir_rules.mk
 -include Bsp/BMI088/subdir_rules.mk
 -include Bsp/BMI088/Klman_Yaw/subdir_rules.mk
 -include Bsp/Button/subdir_rules.mk
@@ -183,8 +187,8 @@ ti_car.out: $(OBJS) $(GEN_CMDS)
 # Other Targets
 clean:
 	-$(RM) $(GEN_MISC_FILES__QUOTED)$(GEN_FILES__QUOTED)$(EXE_OUTPUTS__QUOTED)
-	-$(RM) "empty.o" "ti_msp_dl_config.o" "startup_mspm0g350x_ticlang.o" "Bsp\BMI088\BMI088Middleware.o" "Bsp\BMI088\BMI088driver.o" "Bsp\BMI088\Klman_Yaw\ekf_yaw.o" "Bsp\Button\multi_button.o" "Bsp\Button\multi_button_user.o" "Bsp\Encoder\encoder_user.o" "Bsp\Encoder\hw_encoder.o" "Bsp\Motor\Bsp_Motor.o" "Bsp\Oled\app_oled.o" "Bsp\Oled\hw_oled.o" "Bsp\Pid\pid.o" "Bsp\Pid\pid_user.o" "Bsp\Task_manage\scheduler.o" "Bsp\Task_manage\system.o" "Bsp\Task_manage\task_manage.o" "Bsp\UART\ringbuffer.o" "Bsp\UART\uart_app.o" "Bsp\gray\IIC.o" "Bsp\gray\gray_app.o" "Bsp\gray\hardware_iic.o" 
-	-$(RM) "empty.d" "ti_msp_dl_config.d" "startup_mspm0g350x_ticlang.d" "Bsp\BMI088\BMI088Middleware.d" "Bsp\BMI088\BMI088driver.d" "Bsp\BMI088\Klman_Yaw\ekf_yaw.d" "Bsp\Button\multi_button.d" "Bsp\Button\multi_button_user.d" "Bsp\Encoder\encoder_user.d" "Bsp\Encoder\hw_encoder.d" "Bsp\Motor\Bsp_Motor.d" "Bsp\Oled\app_oled.d" "Bsp\Oled\hw_oled.d" "Bsp\Pid\pid.d" "Bsp\Pid\pid_user.d" "Bsp\Task_manage\scheduler.d" "Bsp\Task_manage\system.d" "Bsp\Task_manage\task_manage.d" "Bsp\UART\ringbuffer.d" "Bsp\UART\uart_app.d" "Bsp\gray\IIC.d" "Bsp\gray\gray_app.d" "Bsp\gray\hardware_iic.d" 
+	-$(RM) "empty.o" "ti_msp_dl_config.o" "startup_mspm0g350x_ticlang.o" "Bsp\ADC\adc_app.o" "Bsp\BMI088\BMI088Middleware.o" "Bsp\BMI088\BMI088driver.o" "Bsp\BMI088\Klman_Yaw\ekf_yaw.o" "Bsp\Button\multi_button.o" "Bsp\Button\multi_button_user.o" "Bsp\Encoder\encoder_user.o" "Bsp\Encoder\hw_encoder.o" "Bsp\Motor\Bsp_Motor.o" "Bsp\Oled\app_oled.o" "Bsp\Oled\hw_oled.o" "Bsp\Pid\pid.o" "Bsp\Pid\pid_user.o" "Bsp\Task_manage\scheduler.o" "Bsp\Task_manage\system.o" "Bsp\Task_manage\task_manage.o" "Bsp\UART\ringbuffer.o" "Bsp\UART\uart_app.o" "Bsp\gray\IIC.o" "Bsp\gray\No_Mcu_gray.o" "Bsp\gray\gray_app.o" "Bsp\gray\hardware_iic.o" 
+	-$(RM) "empty.d" "ti_msp_dl_config.d" "startup_mspm0g350x_ticlang.d" "Bsp\ADC\adc_app.d" "Bsp\BMI088\BMI088Middleware.d" "Bsp\BMI088\BMI088driver.d" "Bsp\BMI088\Klman_Yaw\ekf_yaw.d" "Bsp\Button\multi_button.d" "Bsp\Button\multi_button_user.d" "Bsp\Encoder\encoder_user.d" "Bsp\Encoder\hw_encoder.d" "Bsp\Motor\Bsp_Motor.d" "Bsp\Oled\app_oled.d" "Bsp\Oled\hw_oled.d" "Bsp\Pid\pid.d" "Bsp\Pid\pid_user.d" "Bsp\Task_manage\scheduler.d" "Bsp\Task_manage\system.d" "Bsp\Task_manage\task_manage.d" "Bsp\UART\ringbuffer.d" "Bsp\UART\uart_app.d" "Bsp\gray\IIC.d" "Bsp\gray\No_Mcu_gray.d" "Bsp\gray\gray_app.d" "Bsp\gray\hardware_iic.d" 
 	-@echo 'Finished clean'
 	-@echo ' '
 

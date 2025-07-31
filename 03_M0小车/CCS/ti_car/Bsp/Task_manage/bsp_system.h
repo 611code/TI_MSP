@@ -21,6 +21,7 @@
 #include "pid.h"
 #include "Bsp_Motor.h"
 #include "hardware_iic.h"
+#include "No_Mcu_gray.h"
 
 /* ======== 组件库头文件 =======*/
 #include "system.h"
@@ -35,6 +36,7 @@
 #include "pid_user.h"
 #include "gray_app.h"
 #include "uart_app.h"
+#include "adc_app.h"
 
 extern volatile int uwTick;
 

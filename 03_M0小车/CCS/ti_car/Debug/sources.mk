@@ -125,6 +125,7 @@ GEN_OPTS__QUOTED :=
 # Every subdirectory with source files must be described here
 SUBDIRS := \
 . \
+Bsp/ADC \
 Bsp/BMI088 \
 Bsp/BMI088/Klman_Yaw \
 Bsp/Button \

@@ -85,7 +85,7 @@ Bsp/Motor/Bsp_Motor.o: ../Bsp/Motor/Bsp_Motor.c ../Bsp/Motor/Bsp_Motor.h \
  F:/04_daima/CCS/ti_car/BSP/Pid/pid.h \
  F:/04_daima/CCS/ti_car/BSP/Motor/Bsp_Motor.h \
  F:/04_daima/CCS/ti_car/BSP/gray/hardware_iic.h \
- F:/04_daima/CCS/ti_car/BSP/gray/gw_grayscale_sensor.h \
+ F:/04_daima/CCS/ti_car/BSP/gray/No_Mcu_gray.h \
  F:/04_daima/CCS/ti_car/BSP/Task_manage/system.h \
  F:/04_daima/CCS/ti_car/BSP/BMI088/Klman_Yaw/ekf_yaw.h \
  F:/04_daima/CCS/ti_car/BSP/Oled/app_oled.h \
@@ -93,7 +93,8 @@ Bsp/Motor/Bsp_Motor.o: ../Bsp/Motor/Bsp_Motor.c ../Bsp/Motor/Bsp_Motor.h \
  F:/04_daima/CCS/ti_car/BSP/Encoder/encoder_user.h \
  F:/04_daima/CCS/ti_car/BSP/Pid/pid_user.h \
  F:/04_daima/CCS/ti_car/BSP/gray/gray_app.h \
- F:/04_daima/CCS/ti_car/BSP/UART/uart_app.h
+ F:/04_daima/CCS/ti_car/BSP/UART/uart_app.h \
+ F:/04_daima/CCS/ti_car/BSP/ADC/adc_app.h
 ../Bsp/Motor/Bsp_Motor.h:
 F:/04_daima/CCS/ti_car/BSP/Task_manage/bsp_system.h:
 ti_msp_dl_config.h:
@@ -179,7 +180,7 @@ F:/04_daima/CCS/ti_car/BSP/Encoder/hw_encoder.h:
 F:/04_daima/CCS/ti_car/BSP/Pid/pid.h:
 F:/04_daima/CCS/ti_car/BSP/Motor/Bsp_Motor.h:
 F:/04_daima/CCS/ti_car/BSP/gray/hardware_iic.h:
-F:/04_daima/CCS/ti_car/BSP/gray/gw_grayscale_sensor.h:
+F:/04_daima/CCS/ti_car/BSP/gray/No_Mcu_gray.h:
 F:/04_daima/CCS/ti_car/BSP/Task_manage/system.h:
 F:/04_daima/CCS/ti_car/BSP/BMI088/Klman_Yaw/ekf_yaw.h:
 F:/04_daima/CCS/ti_car/BSP/Oled/app_oled.h:
@@ -188,3 +189,4 @@ F:/04_daima/CCS/ti_car/BSP/Encoder/encoder_user.h:
 F:/04_daima/CCS/ti_car/BSP/Pid/pid_user.h:
 F:/04_daima/CCS/ti_car/BSP/gray/gray_app.h:
 F:/04_daima/CCS/ti_car/BSP/UART/uart_app.h:
+F:/04_daima/CCS/ti_car/BSP/ADC/adc_app.h:

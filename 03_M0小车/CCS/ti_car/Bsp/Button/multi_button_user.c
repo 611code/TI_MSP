@@ -169,7 +169,8 @@ void key_proc(void)
 		{
 			case 1: // KEY_CENTER ??
 				KeyNum=1;	
-				menu_select ^= 1;
+                // menu_select ^= 1;
+				if(menu_select != 2)menu_select ^= 1;
 				OLED_Clear();
 				break;
 			case 2: // KEY_RIGHT ??

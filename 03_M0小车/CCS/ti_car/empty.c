@@ -30,6 +30,7 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "Bsp/gray/gray_app.h"
 #include "bsp_system.h"
 
 void task_init(void)
@@ -39,13 +40,15 @@ void task_init(void)
     load_motor_pwm(0,0);
     
     yaw_loop_init();
-
+    no_gray_init_all();
+    
     OLED_Init();
     OLED_DisPlay_On();
     OLED_Printf(0,0,8,"Wait");
     OLED_Refresh();
 
     Ekf_yaw_Forecast();
+    
     timer_init();
 }
 
@@ -53,7 +56,7 @@ int main(void)
 {
     SYSCFG_DL_init();
 	task_init();
-    //load_motor_pwm(100,100);
+    //load_motor_pwm( 100,100);
     while (1)
     {
 //			scheduler_run();

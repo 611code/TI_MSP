@@ -61,6 +61,8 @@ SYSCONFIG_WEAK void SYSCFG_DL_init(void)
     SYSCFG_DL_UART_0_init();
     SYSCFG_DL_UART_1_init();
     SYSCFG_DL_SPI_BMI_init();
+    SYSCFG_DL_ADC_GRAY_init();
+    SYSCFG_DL_DMA_init();
     SYSCFG_DL_SYSTICK_init();
     SYSCFG_DL_SYSCTL_CLK_init();
     /* Ensure backup structures have no valid state */
@@ -107,6 +109,8 @@ SYSCONFIG_WEAK void SYSCFG_DL_initPower(void)
     DL_UART_Main_reset(UART_0_INST);
     DL_UART_Main_reset(UART_1_INST);
     DL_SPI_reset(SPI_BMI_INST);
+    DL_ADC12_reset(ADC_GRAY_INST);
+
 
 
     DL_GPIO_enablePower(GPIOA);
@@ -119,6 +123,8 @@ SYSCONFIG_WEAK void SYSCFG_DL_initPower(void)
     DL_UART_Main_enablePower(UART_0_INST);
     DL_UART_Main_enablePower(UART_1_INST);
     DL_SPI_enablePower(SPI_BMI_INST);
+    DL_ADC12_enablePower(ADC_GRAY_INST);
+
 
     delay_cycles(POWER_STARTUP_DELAY);
 }
@@ -215,6 +221,12 @@ SYSCONFIG_WEAK void SYSCFG_DL_GPIO_init(void)
 
     DL_GPIO_initDigitalOutput(GPIO_BIN_PIN_BIN2_IOMUX);
 
+    DL_GPIO_initDigitalOutput(Gray_Address_PIN_0_IOMUX);
+
+    DL_GPIO_initDigitalOutput(Gray_Address_PIN_1_IOMUX);
+
+    DL_GPIO_initDigitalOutput(Gray_Address_PIN_2_IOMUX);
+
     DL_GPIO_clearPins(GPIOA, GPIO_CS_PIN_CS2_PIN |
 		GPIO_BIN_PIN_BIN1_PIN |
 		GPIO_BIN_PIN_BIN2_PIN);
@@ -229,10 +241,16 @@ SYSCONFIG_WEAK void SYSCFG_DL_GPIO_init(void)
 		GPIO_ENCODER_PIN_RA_PIN);
     DL_GPIO_clearPins(GPIOB, GPIO_CS_PIN_CS1_PIN |
 		GPIO_AIN_PIN_AIN1_PIN |
-		GPIO_AIN_PIN_AIN2_PIN);
+		GPIO_AIN_PIN_AIN2_PIN |
+		Gray_Address_PIN_0_PIN |
+		Gray_Address_PIN_1_PIN |
+		Gray_Address_PIN_2_PIN);
     DL_GPIO_enableOutput(GPIOB, GPIO_CS_PIN_CS1_PIN |
 		GPIO_AIN_PIN_AIN1_PIN |
-		GPIO_AIN_PIN_AIN2_PIN);
+		GPIO_AIN_PIN_AIN2_PIN |
+		Gray_Address_PIN_0_PIN |
+		Gray_Address_PIN_1_PIN |
+		Gray_Address_PIN_2_PIN);
 
 }
 
@@ -268,6 +286,8 @@ SYSCONFIG_WEAK void SYSCFG_DL_SYSCTL_init(void)
     DL_SYSCTL_setMCLKSource(SYSOSC, HSCLK, DL_SYSCTL_HSCLK_SOURCE_SYSPLL);
     /* INT_GROUP1 Priority */
     NVIC_SetPriority(GPIOA_INT_IRQn, 1);
+    /* DMA Group Priority */
+    NVIC_SetPriority(DMA_INT_IRQn, 1);
 
 }
 SYSCONFIG_WEAK void SYSCFG_DL_SYSCTL_CLK_init(void) {
@@ -504,10 +524,21 @@ SYSCONFIG_WEAK void SYSCFG_DL_UART_0_init(void)
 
     /* Configure Interrupts */
     DL_UART_Main_enableInterrupt(UART_0_INST,
-                                 DL_UART_MAIN_INTERRUPT_RX);
+                                 DL_UART_MAIN_INTERRUPT_DMA_DONE_RX |
+                                 DL_UART_MAIN_INTERRUPT_DMA_DONE_TX);
     /* Setting the Interrupt Priority */
     NVIC_SetPriority(UART_0_INST_INT_IRQN, 1);
 
+    /* Configure DMA Receive Event */
+    DL_UART_Main_enableDMAReceiveEvent(UART_0_INST, DL_UART_DMA_INTERRUPT_RX_TIMEOUT);
+    /* Configure DMA Transmit Event */
+    DL_UART_Main_enableDMATransmitEvent(UART_0_INST);
+    /* Configure FIFOs */
+    DL_UART_Main_enableFIFOs(UART_0_INST);
+    DL_UART_Main_setRXFIFOThreshold(UART_0_INST, DL_UART_RX_FIFO_LEVEL_3_4_FULL);
+    DL_UART_Main_setTXFIFOThreshold(UART_0_INST, DL_UART_TX_FIFO_LEVEL_1_2_EMPTY);
+
+    DL_UART_Main_setRXInterruptTimeout(UART_0_INST, 15);
 
     DL_UART_Main_enable(UART_0_INST);
 }
@@ -578,6 +609,63 @@ SYSCONFIG_WEAK void SYSCFG_DL_SPI_BMI_init(void) {
     /* Enable module */
     DL_SPI_enable(SPI_BMI_INST);
 }
+
+/* ADC_GRAY Initialization */
+static const DL_ADC12_ClockConfig gADC_GRAYClockConfig = {
+    .clockSel       = DL_ADC12_CLOCK_SYSOSC,
+    .divideRatio    = DL_ADC12_CLOCK_DIVIDE_8,
+    .freqRange      = DL_ADC12_CLOCK_FREQ_RANGE_24_TO_32,
+};
+SYSCONFIG_WEAK void SYSCFG_DL_ADC_GRAY_init(void)
+{
+    DL_ADC12_setClockConfig(ADC_GRAY_INST, (DL_ADC12_ClockConfig *) &gADC_GRAYClockConfig);
+    DL_ADC12_initSingleSample(ADC_GRAY_INST,
+        DL_ADC12_REPEAT_MODE_ENABLED, DL_ADC12_SAMPLING_SOURCE_AUTO, DL_ADC12_TRIG_SRC_SOFTWARE,
+        DL_ADC12_SAMP_CONV_RES_12_BIT, DL_ADC12_SAMP_CONV_DATA_FORMAT_UNSIGNED);
+    DL_ADC12_configConversionMem(ADC_GRAY_INST, ADC_GRAY_ADCMEM_ADC_Channel0,
+        DL_ADC12_INPUT_CHAN_0, DL_ADC12_REFERENCE_VOLTAGE_VDDA, DL_ADC12_SAMPLE_TIMER_SOURCE_SCOMP0, DL_ADC12_AVERAGING_MODE_DISABLED,
+        DL_ADC12_BURN_OUT_SOURCE_DISABLED, DL_ADC12_TRIGGER_MODE_AUTO_NEXT, DL_ADC12_WINDOWS_COMP_MODE_DISABLED);
+    DL_ADC12_setPowerDownMode(ADC_GRAY_INST,DL_ADC12_POWER_DOWN_MODE_MANUAL);
+    DL_ADC12_enableConversions(ADC_GRAY_INST);
+}
+
+static const DL_DMA_Config gDMA_CH0_RXConfig = {
+    .transferMode   = DL_DMA_FULL_CH_REPEAT_SINGLE_TRANSFER_MODE,
+    .extendedMode   = DL_DMA_NORMAL_MODE,
+    .destIncrement  = DL_DMA_ADDR_INCREMENT,
+    .srcIncrement   = DL_DMA_ADDR_UNCHANGED,
+    .destWidth      = DL_DMA_WIDTH_BYTE,
+    .srcWidth       = DL_DMA_WIDTH_BYTE,
+    .trigger        = UART_0_INST_DMA_TRIGGER_0,
+    .triggerType    = DL_DMA_TRIGGER_TYPE_EXTERNAL,
+};
+
+SYSCONFIG_WEAK void SYSCFG_DL_DMA_CH0_RX_init(void)
+{
+    DL_DMA_clearInterruptStatus(DMA, DL_DMA_INTERRUPT_CHANNEL1);
+    DL_DMA_enableInterrupt(DMA, DL_DMA_INTERRUPT_CHANNEL1);
+    DL_DMA_initChannel(DMA, DMA_CH0_RX_CHAN_ID , (DL_DMA_Config *) &gDMA_CH0_RXConfig);
+}
+static const DL_DMA_Config gDMA_CH1_TXConfig = {
+    .transferMode   = DL_DMA_SINGLE_TRANSFER_MODE,
+    .extendedMode   = DL_DMA_NORMAL_MODE,
+    .destIncrement  = DL_DMA_ADDR_UNCHANGED,
+    .srcIncrement   = DL_DMA_ADDR_INCREMENT,
+    .destWidth      = DL_DMA_WIDTH_BYTE,
+    .srcWidth       = DL_DMA_WIDTH_BYTE,
+    .trigger        = UART_0_INST_DMA_TRIGGER_1,
+    .triggerType    = DL_DMA_TRIGGER_TYPE_EXTERNAL,
+};
+
+SYSCONFIG_WEAK void SYSCFG_DL_DMA_CH1_TX_init(void)
+{
+    DL_DMA_initChannel(DMA, DMA_CH1_TX_CHAN_ID , (DL_DMA_Config *) &gDMA_CH1_TXConfig);
+}
+SYSCONFIG_WEAK void SYSCFG_DL_DMA_init(void){
+    SYSCFG_DL_DMA_CH0_RX_init();
+    SYSCFG_DL_DMA_CH1_TX_init();
+}
+
 
 SYSCONFIG_WEAK void SYSCFG_DL_SYSTICK_init(void)
 {

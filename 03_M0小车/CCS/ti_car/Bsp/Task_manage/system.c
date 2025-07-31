@@ -7,6 +7,7 @@ uint16_t menu_timer30ms;
 uint8_t measure_timer50ms;
 uint8_t button_timer10ms;
 uint8_t gary_timer10ms;
+uint8_t no_gary_timer10ms;
 uint8_t yaw_timer5ms;
 uint8_t uart_timer200ms;
 uint8_t pos_flag=0;
@@ -44,10 +45,15 @@ void task_run(void)
         button_timer10ms = 0;
         key_proc();
     }
-    if(gary_timer10ms>=15)
+    // if(gary_timer10ms>=15)
+    // {
+    //     gary_timer10ms = 0;
+    //     Gray_Task();
+    // }
+    if(no_gary_timer10ms>=15)
     {
-        gary_timer10ms = 0;
-        Gray_Task();
+        no_gary_timer10ms = 0;
+        no_gray_work();
     }
     if(measure_timer50ms >= 50)//50ms一周期 
     {
@@ -77,7 +83,8 @@ void TIMER_TICK_INST_IRQHandler(void)
         // menu_timer30ms++;
 		measure_timer50ms++;
 		button_timer10ms++;
-		gary_timer10ms++;
+		// gary_timer10ms++;
+        no_gary_timer10ms++;
         uart_timer200ms++;
 		pid_timer50ms++;
         if(yaw_timer5ms>=5)
