@@ -4,8 +4,6 @@
 #define GRAY_ADC_INST ADC_GRAY_INST
 #define GRAY_ADC_CHANNEL ADC_GRAY_ADCMEM_ADC_Channel0_REF
 
-volatile uint16_t ADC_VALUE[16];//ADC采集的数据保存地址
-
 // 等待控制器进入 IDLE 状态，超时返回 0，成功返回 1
 static uint8_t wait_idle_with_timeout(uint32_t timeout_ms) {
     uint32_t start = uwTick;
@@ -16,35 +14,6 @@ static uint8_t wait_idle_with_timeout(uint32_t timeout_ms) {
     }
     return 1;
 }
-
-// void adc_init(void)
-// {
-//     //设置DMA搬运的起始地址
-//     DL_DMA_setSrcAddr(DMA, DMA_CH0_CHAN_ID, (uint32_t) &ADC0->ULLMEM.MEMRES[0]);
-//     //设置DMA搬运的目的地址
-//     DL_DMA_setDestAddr(DMA, DMA_CH0_CHAN_ID, (uint32_t) &ADC_VALUE[0]);
-//     //开启DMA
-//     DL_DMA_enableChannel(DMA, DMA_CH0_CHAN_ID);
-//     //开启ADC转换
-//     DL_ADC12_startConversion(GRAY_ADC_INST);
-// }
-
-// //读取ADC的数据
-// unsigned int adc_getValue(void)
-// {
-//     unsigned int gAdcResult = 0;
-//     unsigned char i = 0;
-
-//     // //采集多次累加
-//     // for( i = 0; i < 8; i++ )
-//     // {
-//     //         gAdcResult += ADC_VALUE[i];
-//     // }
-//     // //均值滤波
-//     // gAdcResult /= 8;
-//     gAdcResult = ADC_VALUE[1];
-//     return gAdcResult;
-// }
 
 unsigned int adc_getValue(void)
 {
