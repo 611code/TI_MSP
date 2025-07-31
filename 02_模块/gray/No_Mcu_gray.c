@@ -3,10 +3,16 @@
 #include "adc_app.h"
 
 unsigned short Anolog[8]={0};
-unsigned short white[8]={1180,1180,1180,1180,1180,1180,1180,1180};
-unsigned short black[8]={71,71,71,71,71,71,71,71};
+unsigned short white[8]={2800,2800,2800,2800,2800,2800,2800,2800};
+unsigned short black[8]={2100,2100,2100,2100,2100,2100,2100,2100};
 unsigned short Normal[8];
 unsigned char rx_buff[256]={0};
+// unsigned char Digtal; // ������
+uint8_t black_line_count = 0;//
+
+float gray_weights[8] = {-30.0f, -20.0f, -5.0f, -2.0f, 2.0f, 5.0f, 20.0f, 30.0f}; // 8 ·�Ҷ�ͨ��Ȩ�ر�
+
+float g_line_position_error; // ѭ�����ֵ
 
 //初始化
 No_MCU_Sensor sensor;
@@ -32,8 +38,13 @@ void Get_Analog_value(unsigned short *result)
         {
             Anolag+=Get_adc_of_user();  // 累加ADC采样值
         }
-				if(!Direction)result[i]=Anolag/8;  // 计算平均值
+
+		if(!Direction)result[i]=Anolag/8;  // 计算平均值
         else result[7-i]=Anolag/8;  // 计算平均值
+        // if(!Direction)
+        //     result[i]     = Get_adc_of_user();
+        // else
+        //     result[7 - i] = Get_adc_of_user();
         Anolag=0;  // 重置累加器
     }
 }
@@ -231,18 +242,38 @@ void no_gray_init_all(void)
 
 }
 
+
+
+
 void no_gray_work(void)
 {
-    			//无时基传感器常规任务，包含模拟量，数字量，归一化量
-			No_Mcu_Ganv_Sensor_Task_Without_tick(&sensor);
-			//有时基传感器常规任务，包含模拟量，数字量，归一化量
-			// No_Mcu_Ganv_Sensor_Task_With_tick(&sensor)
-			//( 获取传感器数字量结果(只有当有黑白值传入进去了之后才会有这个值！！)
-			Digtal=Get_Digtal_For_User(&sensor);
-			// sprintf((char *)rx_buff,"Digtal %d-%d-%d-%d-%d-%d-%d-%d\r\n",(Digtal>>0)&0x01,(Digtal>>1)&0x01,(Digtal>>2)&0x01,(Digtal>>3)&0x01,(Digtal>>4)&0x01,(Digtal>>5)&0x01,(Digtal>>6)&0x01,(Digtal>>7)&0x01);
-			// uart0_send_string((char *)rx_buff);
-			// memset(rx_buff,0,256);
-            // delay_ms(1);
+    black_line_count = 0;
+    float weighted_sum = 0;
+    
+        //无时基传感器常规任务，包含模拟量，数字量，归一化量
+    No_Mcu_Ganv_Sensor_Task_Without_tick(&sensor);
+    //有时基传感器常规任务，包含模拟量，数字量，归一化量
+    // No_Mcu_Ganv_Sensor_Task_With_tick(&sensor)
+    //( 获取传感器数字量结果(只有当有黑白值传入进去了之后才会有这个值！！)
+    Digtal=~Get_Digtal_For_User(&sensor);
+    // sprintf((char *)rx_buff,"Digtal %d-%d-%d-%d-%d-%d-%d-%d\r\n",(Digtal>>0)&0x01,(Digtal>>1)&0x01,(Digtal>>2)&0x01,(Digtal>>3)&0x01,(Digtal>>4)&0x01,(Digtal>>5)&0x01,(Digtal>>6)&0x01,(Digtal>>7)&0x01);
+    // uart0_send_string((char *)rx_buff);
+    // memset(rx_buff,0,256);
+    // delay_ms(1);
+    
+
+    for(uint8_t i = 0; i < 8; i++)
+    {
+        if((Digtal>>i) & 0x01)
+        {
+            weighted_sum += gray_weights[i];
+            black_line_count++;
+        }
+    }
+    
+    if(black_line_count > 0)
+    g_line_position_error = weighted_sum / (float)black_line_count;
+    delay_ms(10);
 }
 
 			// //获取传感器模拟量结果(有黑白值初始化后返回1 没有返回 0)
