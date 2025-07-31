@@ -34,10 +34,16 @@ no_gray_init_all();
 no_gray_work();
 ```
 
+我这边15ms周期执行
+
 显示
 
 ```
-OLED_Printf(0,48,8,"Gary %d%d%d%d%d%d%d%d ",(Digtal>>0)&0x01,(Digtal>>1)&0x01,(Digtal>>2)&0x01,(Digtal>>3)&0x01,(Digtal>>4)&0x01,(Digtal>>5)&0x01,(Digtal>>6)&0x01,(Digtal>>7)&0x01);	
+extern uint8_t black_line_count;
+extern unsigned char Digtal;
+
+OLED_Printf(0,48,8,"Gary %d%d%d%d%d%d%d%d L%d",(Digtal>>0)&0x01,(Digtal>>1)&0x01,(Digtal>>2)&0x01,(Digtal>>3)&0x01,(Digtal>>4)&0x01,(Digtal>>5)&0x01,(Digtal>>6)&0x01,(Digtal>>7)&0x01,black_line_count);	
+
 
 ```
 
@@ -62,21 +68,38 @@ extern unsigned short Anolog[8];
 extern unsigned short white[8];
 extern unsigned short black[8];
 
+OLED_Printf(0,0,8,"gray adjust mode");
+no_gray_adjust();
+OLED_Printf(0,16,8,"Anolog:%d ",Anolog[0]);
+OLED_Refresh();
 if(KeyNum == 1)
 {
-    no_gray_adjust();
+    KeyNum = 0;
     for(uint8_t i=0;i<8;i++)
     {
         white[i] = Anolog[i];
     }
+    OLED_Printf(0,32,8,"white %d ",white[0]);	
+    OLED_Refresh();
 }
 else if(KeyNum == 2)
 {
+    KeyNum = 0;
     for(uint8_t i=0;i<8;i++)
     {
         black[i] = Anolog[i];
     }
+    OLED_Printf(0,48,8,"black %d ",black[0]);	
+    OLED_Refresh();
 }
+else if(KeyNum == 4)
+{
+    KeyNum = 0;
+    menu_select = 0;
+    adjust_mode = 0;
+}
+
+OLED_Printf(64,32,8,"uwTick:%d   ",uwTick);
 ```
 
 
